@@ -2,9 +2,8 @@ const pool = require('../database/db');
 
 async function getAllListings() {
   const result = await pool.query(
-    `SELECT id, title, description, price, location, contact_info, user_id, created_at, updated_at
+    `SELECT id, title, description, price, category, image_url, contact_info, user_id, created_at, updated_at
      FROM listings
-     WHERE is_active IS DISTINCT FROM FALSE
      ORDER BY created_at DESC`
   );
 
@@ -13,9 +12,9 @@ async function getAllListings() {
 
 async function getListingById(id) {
   const result = await pool.query(
-    `SELECT id, title, description, price, location, contact_info, user_id, created_at, updated_at
+    `SELECT id, title, description, price, category, image_url, contact_info, user_id, created_at, updated_at
      FROM listings
-     WHERE id = $1 AND is_active IS DISTINCT FROM FALSE
+     WHERE id = $1
      LIMIT 1`,
     [id]
   );
@@ -23,19 +22,19 @@ async function getListingById(id) {
   return result.rows[0] || null;
 }
 
-async function createListing({ title, description, price, location, contact_info, user_id }) {
+async function createListing({ title, description, price, category = null, image_url = null, contact_info, user_id }) {
   const result = await pool.query(
-    `INSERT INTO listings (title, description, price, location, contact_info, user_id)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, title, description, price, location, contact_info, user_id, created_at, updated_at`,
-    [title, description, price, location, contact_info, user_id]
+    `INSERT INTO listings (title, description, price, category, image_url, contact_info, user_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, title, description, price, category, image_url, contact_info, user_id, created_at, updated_at`,
+    [title, description, price, category, image_url, contact_info, user_id]
   );
 
   return result.rows[0];
 }
 
 async function updateListing(id, fields) {
-  const allowed = ['title', 'description', 'price', 'location', 'contact_info'];
+  const allowed = ['title', 'description', 'price', 'category', 'image_url', 'contact_info'];
   const set = [];
   const values = [];
 
@@ -53,7 +52,7 @@ async function updateListing(id, fields) {
   // updated_at to now()
   set.push(`updated_at = now()`);
 
-  const query = `UPDATE listings SET ${set.join(', ')} WHERE id = $${idx} RETURNING id, title, description, price, location, contact_info, user_id, created_at, updated_at`;
+  const query = `UPDATE listings SET ${set.join(', ')} WHERE id = $${idx} RETURNING id, title, description, price, category, image_url, contact_info, user_id, created_at, updated_at`;
   values.push(id);
 
   const result = await pool.query(query, values);

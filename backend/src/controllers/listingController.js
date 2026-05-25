@@ -29,7 +29,7 @@ async function createListing(req, res) {
     const userId = req.user && req.user.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { title, description = '', price = null, location = '', contact_info = '' } = req.body;
+    const { title, description = '', price = null, category = '', image_url = '', contact_info = '' } = req.body;
 
     if (!title || title.trim().length < 3) {
       return res.status(400).json({ error: 'Title is required (min 3 chars)' });
@@ -39,7 +39,8 @@ async function createListing(req, res) {
       title: title.trim(),
       description: description.trim(),
       price,
-      location: location.trim(),
+      category: category.trim() || null,
+      image_url: image_url.trim() || null,
       contact_info: contact_info.trim(),
       user_id: userId,
     });
@@ -61,7 +62,7 @@ async function updateListing(req, res) {
     if (!userId || existing.user_id !== userId) return res.status(403).json({ error: 'Forbidden' });
 
     const fields = {};
-    ['title', 'description', 'price', 'location', 'contact_info'].forEach((k) => {
+    ['title', 'description', 'price', 'category', 'image_url', 'contact_info'].forEach((k) => {
       if (Object.prototype.hasOwnProperty.call(req.body, k)) fields[k] = req.body[k];
     });
 
